@@ -17,9 +17,6 @@
       <None Update="UNINSTALL.sh">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="cs-script.cfg">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
       <None Update="cs-script-data\script-project.xml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
