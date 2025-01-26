@@ -22,17 +22,17 @@ else
 string appWorkingDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
 string scriptName = Path.GetFileName(scriptFile);
-string scriptRootPath = Path.GetPathRoot(scriptFile);
+string dashedScriptNamePath = scriptName + "-" + scriptFile.Replace('/', '-');
 
 CreateDirectory( appWorkingDir + "/compilations");
 
-CreateDirectory(appWorkingDir + $"/compilations/{scriptName}");
+CreateDirectory(appWorkingDir + $"/compilations/{dashedScriptNamePath}");
 
 byte[] script = File.ReadAllBytes(scriptFile);
 
 string scriptVersionHash = Convert.ToHexString(SHA1.HashData(script));
 
-string workingDir = appWorkingDir + $"/compilations/{scriptName}/{scriptVersionHash}";
+string workingDir = appWorkingDir + $"/compilations/{dashedScriptNamePath}/{scriptVersionHash}";
 
 if (!Directory.Exists(workingDir))
 {
