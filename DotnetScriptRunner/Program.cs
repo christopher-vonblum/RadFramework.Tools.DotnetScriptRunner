@@ -19,19 +19,20 @@ else
     scriptFile = args[0];
 }
 
+string appWorkingDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
 string scriptName = Path.GetFileName(scriptFile);
 string scriptRootPath = Path.GetPathRoot(scriptFile);
 
-CreateDirectory("compilations");
+CreateDirectory( appWorkingDir + "/compilations");
 
-CreateDirectory($"compilations/{scriptName}");
+CreateDirectory(appWorkingDir + $"/compilations/{scriptName}");
 
 byte[] script = File.ReadAllBytes(scriptFile);
 
 string scriptVersionHash = Convert.ToHexString(SHA1.HashData(script));
 
-string workingDir = System.IO.Path.GetDirectoryName(
-    System.Reflection.Assembly.GetExecutingAssembly().Location) + $"/compilations/{scriptName}/{scriptVersionHash}";
+string workingDir = appWorkingDir + $"/compilations/{scriptName}/{scriptVersionHash}";
 
 if (!Directory.Exists(workingDir))
 {
