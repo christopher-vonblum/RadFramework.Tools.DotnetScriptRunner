@@ -68,7 +68,7 @@ bool BuildScriptAssembly()
 {
     CreateDirectory(workingDir);
 
-    FileCopyOver("res/script-project.xml", workingDir + "/script.csproj");
+    FileCopyOver( appWorkingDir + "/res/script-project.xml", workingDir + "/script.csproj");
     File.WriteAllBytes(workingDir + "/Program.cs", script);
 
     var buildProcess = RunShellCommand(workingDir, "dotnet", "build script.csproj", true);
