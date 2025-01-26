@@ -1,6 +1,6 @@
 #!/bin/sh
 cd ..
 CurrentUser=$USER
-sudo chown $CurrentUser RadFramework.Tools.DotnetScriptRunner -R
-cd RadFramework.Tools.DotnetScriptRunner
+sudo chown $CurrentUser cs-script -R
+cd cs-script
 echo "$CurrentUser owns the project now."
