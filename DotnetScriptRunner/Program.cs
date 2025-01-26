@@ -4,6 +4,12 @@ using System.Security.Cryptography;
 
 string scriptFile;
 
+if (args.Length == 0 && !Debugger.IsAttached)
+{
+    Console.WriteLine("No script file supplied.");
+    return -1;
+}
+
 if (Debugger.IsAttached)
 {
     scriptFile = "TestScript.csx";
@@ -27,15 +33,64 @@ string scriptVersionHash = Convert.ToHexString(SHA1.HashData(script));
 string workingDir = System.IO.Path.GetDirectoryName(
     System.Reflection.Assembly.GetExecutingAssembly().Location) + $"/compilations/{scriptName}/{scriptVersionHash}";
 
-CreateDirectory(workingDir);
+if (!Directory.Exists(workingDir))
+{
+    if (!BuildScriptAssembly())
+    {
+        return -1;
+    }
+}
 
-File.Copy("res/script-project.xml", workingDir + "/script.csproj");
-File.WriteAllBytes(workingDir + "/Program.cs", script);
+if (!File.Exists(workingDir + "/bin/Debug/net9.0/script.dll"))
+{
+    if (!BuildScriptAssembly())
+    {
+        return -1;
+    }
+}
 
-RunShellCommand(workingDir, "dotnet", "build script.csproj");
+Assembly scriptAssembly = Assembly.LoadFile(workingDir + "/bin/Debug/net9.0/script.dll");
 
-RunShellCommand(workingDir + "/bin/Debug/net9.0/", "dotnet", "script.dll " + string.Join(' ', args.Skip(1)));
+var mainMethod = scriptAssembly.EntryPoint;
 
+object result = mainMethod.Invoke(null, new object[] { args.Skip(1).ToArray()} );
+
+if (mainMethod.ReturnType == typeof(int))
+{
+    return (int)result;
+}
+
+return 0;
+
+
+bool BuildScriptAssembly()
+{
+    CreateDirectory(workingDir);
+
+    FileCopyOver("res/script-project.xml", workingDir + "/script.csproj");
+    File.WriteAllBytes(workingDir + "/Program.cs", script);
+
+    var buildProcess = RunShellCommand(workingDir, "dotnet", "build script.csproj", true);
+
+    if (buildProcess.ExitCode != 0)
+    {
+        Console.Write(buildProcess.StandardOutput.ReadToEnd());
+        Console.Write(buildProcess.StandardError.ReadToEnd());
+        return false;
+    }
+
+    return true;
+}
+
+void FileCopyOver(string path, string target)
+{
+    if (File.Exists(target))
+    {
+        File.Delete(target);
+    }
+    
+    File.Copy(path, target);
+}
 void CreateDirectory(string path)
 {
     if (!Directory.Exists(path))
@@ -44,7 +99,7 @@ void CreateDirectory(string path)
     }
 }
 
-void RunShellCommand(string workingDir, string command, string arguments)
+Process RunShellCommand(string workingDir, string command, string arguments, bool writeOutput)
 {
     Process process = new Process();
     process.StartInfo.UseShellExecute = false;
@@ -58,6 +113,5 @@ void RunShellCommand(string workingDir, string command, string arguments)
     process.Start();
     process.WaitForExit();
 
-    Console.WriteLine(process.StandardOutput.ReadToEnd());
-    ;
+    return process;
 }
