@@ -6,7 +6,7 @@ string scriptFile;
 
 if (args.Length == 0 && !Debugger.IsAttached)
 {
-    Console.WriteLine("No script file supplied.");
+    Console.Error.WriteLine("No script file supplied.");
     return -1;
 }
 
@@ -42,7 +42,7 @@ if (!Directory.Exists(workingDir))
     }
 }
 
-if (!File.Exists(workingDir + "/bin/Debug/net9.0/script.dll"))
+if (!File.Exists(workingDir + $"/bin/Debug/net9.0/{scriptName}.dll"))
 {
     if (!BuildScriptAssembly())
     {
@@ -50,28 +50,53 @@ if (!File.Exists(workingDir + "/bin/Debug/net9.0/script.dll"))
     }
 }
 
-Assembly scriptAssembly = Assembly.LoadFile(workingDir + "/bin/Debug/net9.0/script.dll");
+/*
+Assembly scriptAssembly = Assembly.LoadFile(workingDir + $"/bin/Debug/net9.0/{scriptName}.dll");
 
 var mainMethod = scriptAssembly.EntryPoint;
 
-object result = mainMethod.Invoke(null, new object[] { args.Skip(1).ToArray()} );
+object result;
+
+try
+{
+    result = mainMethod.Invoke(null, new object[] { args.Skip(1).ToArray()} );
+}
+catch (Exception e)
+{
+    Console.WriteLine("Exception occured in script:");
+    Console.Write(e.ToString());
+    return -1;
+}
 
 if (mainMethod.ReturnType == typeof(int))
 {
     return (int)result;
 }
 
-return 0;
+*/
 
+var programRunning = RunShellCommand(
+    Path.GetPathRoot(scriptFile),
+    "dotnet",
+    workingDir + $"/bin/Debug/net9.0/{scriptName}.dll "
+    + string.Join(' ', args.Skip(1)));
+
+Console.Write(programRunning.StandardOutput.ReadToEnd());
+Console.Write(programRunning.StandardError.ReadToEnd());
+
+return programRunning.ExitCode;
 
 bool BuildScriptAssembly()
 {
     CreateDirectory(workingDir);
 
-    FileCopyOver( appWorkingDir + "/res/script-project.xml", workingDir + "/script.csproj");
-    File.WriteAllBytes(workingDir + "/Program.cs", script);
+    FileCopyOver(appWorkingDir + "/res/script-project.xml", workingDir + $"/{scriptName}.csproj");
 
-    var buildProcess = RunShellCommand(workingDir, "dotnet", "build script.csproj", true);
+    string[] scriptLines = File.ReadAllLines(scriptFile);
+
+    File.WriteAllLines(workingDir + "/Program.cs", scriptLines.Skip(1));
+
+    var buildProcess = RunShellCommand(workingDir, "dotnet", $"build {scriptName}.csproj");
 
     if (buildProcess.ExitCode != 0)
     {
@@ -100,7 +125,7 @@ void CreateDirectory(string path)
     }
 }
 
-Process RunShellCommand(string workingDir, string command, string arguments, bool writeOutput)
+Process RunShellCommand(string workingDir, string command, string arguments)
 {
     Process process = new Process();
     process.StartInfo.UseShellExecute = false;
