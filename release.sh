@@ -1,4 +1,5 @@
 #!/bin/sh
+cp doc/README.txt release
 cp src/cs-script/INSTALL.sh release
 cp src/cs-script/UNINSTALL.sh release
 cp src/cs-script/TestScript.csx release

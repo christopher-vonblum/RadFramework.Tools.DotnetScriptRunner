@@ -1,4 +1,5 @@
 #!/bin/sh -v
+
 SCRIPT_DIR="$(dirname ${0})"
 cd ..
 sudo chown "${USER}" "${SCRIPT_DIR}" -R
