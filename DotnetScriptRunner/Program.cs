@@ -34,7 +34,7 @@ File.WriteAllBytes(workingDir + "/Program.cs", script);
 
 RunShellCommand(workingDir, "dotnet", "build script.csproj");
 
-RunShellCommand(workingDir, "dotnet", "run bin/Debug/net9.0/script.dll " + string.Join(' ', args.Skip(1)));
+RunShellCommand(workingDir + "/bin/Debug/net9.0/", "dotnet", "script.dll " + string.Join(' ', args.Skip(1)));
 
 void CreateDirectory(string path)
 {
