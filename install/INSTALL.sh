@@ -6,4 +6,4 @@ SCRIPT_DIR="${TEMP}"
 echo "${SCRIPT_DIR}"
 
 chmod +x MANUAL-INSTALL.sh
-sudo ./MANUAL-INSTALL.sh "${SCRIPT_DIR}"
+bash ./MANUAL-INSTALL.sh "${SCRIPT_DIR}"
