@@ -111,6 +111,7 @@ void CreateDirectory(string path)
     if (!Directory.Exists(path))
     {
         Directory.CreateDirectory(path);
+        RunShellCommand(path, "chmod", "-R a+rwx " + path, false);
     }
 }
 
