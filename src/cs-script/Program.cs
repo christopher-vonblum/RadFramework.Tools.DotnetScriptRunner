@@ -10,16 +10,19 @@ if (args.Length == 0 && !Debugger.IsAttached)
     return -1;
 }
 
-if (Debugger.IsAttached)
-{
-    scriptFile = "TestScript.csx";
-}
-else
-{
-    scriptFile = args[0];
-}
+string appWorkingDir; 
 
-string appWorkingDir = File.ReadAllText("cs-script.cfg");
+#if DEBUG
+
+scriptFile = "TestScript.csx";
+appWorkingDir = "/home/anon/Documents/workspace/cs-script/src/cs-script/bin/Debug/net9.0";
+
+#else
+
+scriptFile = args[0];
+appWorkingDir = File.ReadAllText("cs-script.cfg");
+
+#endif
 
 string scriptName = Path.GetFileName(scriptFile);
 string dashedScriptNamePath = scriptName + "-" + scriptFile.Replace('/', '-');
@@ -34,6 +37,8 @@ string scriptVersionHash = Convert.ToHexString(SHA1.HashData(script));
 
 string workingDir = appWorkingDir + $"/cs-script-data/compilations/{dashedScriptNamePath}/{scriptVersionHash}";
 
+string scriptAssemblyPath = workingDir + $"/{scriptName}.dll";
+
 if (!Directory.Exists(workingDir))
 {
     if (!BuildScriptAssembly())
@@ -42,7 +47,7 @@ if (!Directory.Exists(workingDir))
     }
 }
 
-if (!File.Exists(workingDir + $"/bin/Debug/net9.0/{scriptName}.dll"))
+if (!File.Exists(scriptAssemblyPath))
 {
     if (!BuildScriptAssembly())
     {
@@ -50,40 +55,12 @@ if (!File.Exists(workingDir + $"/bin/Debug/net9.0/{scriptName}.dll"))
     }
 }
 
-/*
-Assembly scriptAssembly = Assembly.LoadFile(workingDir + $"/bin/Debug/net9.0/{scriptName}.dll");
-
-var mainMethod = scriptAssembly.EntryPoint;
-
-object result;
-
-try
-{
-    result = mainMethod.Invoke(null, new object[] { args.Skip(1).ToArray()} );
-}
-catch (Exception e)
-{
-    Console.WriteLine("Exception occured in script:");
-    Console.Write(e.ToString());
-    return -1;
-}
-
-if (mainMethod.ReturnType == typeof(int))
-{
-    return (int)result;
-}
-
-*/
-
 var programRunning = RunShellCommand(
     Path.GetPathRoot(scriptFile),
     "dotnet",
-    workingDir + $"/bin/Debug/net9.0/{scriptName}.dll "
+    scriptAssemblyPath
     + string.Join(' ', args.Skip(1)),
     false);
-
-//Console.Write(programRunning.StandardOutput.ReadToEnd());
-//Console.Write(programRunning.StandardError.ReadToEnd());
 
 return programRunning.ExitCode;
 
@@ -91,13 +68,17 @@ bool BuildScriptAssembly()
 {
     CreateDirectory(workingDir);
 
-    FileCopyOver(appWorkingDir + "/cs-script-data/script-project.xml", workingDir + $"/{scriptName}.csproj");
+    string projectDir = workingDir + "/project";
+    
+    CreateDirectory(projectDir);
+    
+    FileCopyOver(appWorkingDir + "/cs-script-data/script-project.xml", projectDir + $"/{scriptName}.csproj");
 
     string[] scriptLines = File.ReadAllLines(scriptFile);
 
-    File.WriteAllLines(workingDir + "/Program.cs", scriptLines.Skip(1));
+    File.WriteAllLines(projectDir + "/Program.cs", scriptLines.Skip(1));
 
-    var buildProcess = RunShellCommand(workingDir, "dotnet", $"build {scriptName}.csproj", true);
+    var buildProcess = RunShellCommand(projectDir, "dotnet", $"build {scriptName}.csproj", true);
 
     if (buildProcess.ExitCode != 0)
     {
@@ -105,7 +86,14 @@ bool BuildScriptAssembly()
         Console.Write(buildProcess.StandardError.ReadToEnd());
         return false;
     }
-
+    
+    foreach (string outputFile in Directory.GetFiles(projectDir + $"/bin/Debug/net9.0/"))
+    {
+        File.Copy(outputFile, workingDir + "/" + Path.GetFileName(outputFile));
+    }
+    
+    Directory.Delete(projectDir, true);
+    
     return true;
 }
 
