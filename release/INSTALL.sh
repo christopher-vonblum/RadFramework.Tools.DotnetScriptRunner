@@ -6,8 +6,10 @@ SCRIPT_DIR="${TEMP}"
 echo "${SCRIPT_DIR}"
 
 cd ..
-sudo chown "${USER}" "${SCRIPT_DIR}" -R
+sudo chown -R "${USER}" "${SCRIPT_DIR}"
 cd "${SCRIPT_DIR}"
+
+sudo chmod -R a+rwx "${SCRIPT_DIR}"
 
 echo -n "${SCRIPT_DIR}" > cs-script.cfg
 

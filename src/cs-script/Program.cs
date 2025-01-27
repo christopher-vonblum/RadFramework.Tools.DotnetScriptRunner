@@ -20,7 +20,7 @@ appWorkingDir = "/home/anon/Documents/workspace/cs-script/src/cs-script/bin/Debu
 #else
 
 scriptFile = args[0];
-appWorkingDir = File.ReadAllText("cs-script.cfg");
+appWorkingDir = File.ReadAllText("/usr/bin/cs-script.cfg");
 
 #endif
 
