@@ -89,7 +89,9 @@ bool BuildScriptAssembly()
     
     foreach (string outputFile in Directory.GetFiles(projectDir + $"/bin/Debug/net9.0/"))
     {
-        File.Copy(outputFile, workingDir + "/" + Path.GetFileName(outputFile));
+        string destFile = workingDir + "/" + Path.GetFileName(outputFile);
+        File.Copy(outputFile, destFile);
+        RunShellCommand(workingDir, "chmod", "a+rwx " + destFile, false);
     }
     
     Directory.Delete(projectDir, true);
