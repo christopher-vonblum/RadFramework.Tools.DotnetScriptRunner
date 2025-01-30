@@ -13,4 +13,4 @@ chmod -R a+rwx cs-script.cfg
 ./UPDATE-BIN-LINKS.sh
 
 chmod +x "${SCRIPT_DIR}/TestScript.cs"
-bash "${SCRIPT_DIR}/TestScript.cs"
+exec "${SCRIPT_DIR}/TestScript.cs"
